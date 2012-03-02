@@ -88,7 +88,7 @@
         if (bounds.origin.y < 0) {
             bounds.origin.y -= bounds.origin.y;
         }
-        bounds.origin.y += 3;
+        bounds.origin.y += BOTTOM_MARGIN;
         layer.bounds = bounds;
     }
     
