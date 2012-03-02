@@ -2,17 +2,18 @@
 //  HeightForWidthManager.m
 //  HeightForWidth
 //
-//  Created by Richard Hult on 2009-10-14.
+//  Created by Richard Hult on 2009-10-14, with revisions by Sam Stigler on 2012-03-01.
 //  Copyright 2009 Richard Hult. All rights reserved.
 //
 
 #import "HeightForWidthLayoutManager.h"
 
+#define BOTTOM_MARGIN 0;
 
 @implementation HeightForWidthLayoutManager
 
 - (NSFont *)fontForTextLayer:(CATextLayer *)layer
-{
+{    
     NSFont *font = nil;
     
     // Convert the separate font and font size to an NSFont. There are four different ways
@@ -45,14 +46,19 @@
     NSDictionary *attributes = [NSDictionary dictionaryWithObject:[self fontForTextLayer:layer]
                                                            forKey:NSFontAttributeName];
     
-    return [[[NSAttributedString alloc] initWithString:layer.string
-                                            attributes:attributes] autorelease];
+    return [[NSAttributedString alloc] initWithString:layer.string
+                                           attributes:attributes];
 }
 
+// verified 2/23/2012 that this returns the correct size for sstigler user.
 - (CGSize)frameSizeForTextLayer:(CATextLayer *)layer
 {
+    if ([layer string] == nil) {
+        return CGSizeZero;
+    }
+    
     NSAttributedString *string = [self attributedStringForTextLayer:layer];
-    CTTypesetterRef typesetter = CTTypesetterCreateWithAttributedString((CFAttributedStringRef)string);
+    CTTypesetterRef typesetter = CTTypesetterCreateWithAttributedString((__bridge CFAttributedStringRef)string);
     CGFloat width = layer.bounds.size.width;
     
     CFIndex offset = 0, length;
@@ -71,7 +77,6 @@
     } while (offset < [string length]);
     
     CFRelease(typesetter);
-    
     return CGSizeMake(width, ceil(y));
 }
 
@@ -80,6 +85,10 @@
     if ([layer isKindOfClass:[CATextLayer class]] && ((CATextLayer *)layer).wrapped) {
         CGRect bounds = layer.bounds;
         bounds.size = [self frameSizeForTextLayer:(CATextLayer *)layer];
+        if (bounds.origin.y < 0) {
+            bounds.origin.y -= bounds.origin.y;
+        }
+        bounds.origin.y += 3;
         layer.bounds = bounds;
     }
     
@@ -90,16 +99,21 @@
 {
     // First let the regular constraints kick in to set the width of text layers.
     [super layoutSublayersOfLayer:layer];
-
+    
     // Now adjust the height of any wrapped text layers, as their widths are known.
     for (CALayer *child in [layer sublayers]) {
         if ([child isKindOfClass:[CATextLayer class]]) {
-            [self preferredSizeOfLayer:child];
+            [self preferredSizeOfLayer:(CATextLayer *)child];
+            CGRect frame = child.frame;
+            if (frame.origin.y < 0) {
+                frame.origin.y -= child.frame.origin.y;
+            }
+            frame.origin.y += BOTTOM_MARGIN; // bottom margin
+            child.frame = frame;
         }
     }
-
+    
     // Then let the regular constraints adjust any values that depend on heights.
-    [super layoutSublayersOfLayer:layer];
 }
 
 @end

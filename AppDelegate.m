@@ -66,9 +66,9 @@
                                                                   relativeTo:@"text"
                                                                    attribute:kCAConstraintMidY]];
     [textBackgroundLayer addConstraint:[CAConstraint constraintWithAttribute:kCAConstraintHeight
-                                                                  relativeTo:@"text"
-                                                                   attribute:kCAConstraintHeight
-                                                                      offset:2 * PADDING]];
+                                                                relativeTo:@"text"
+                                                                 attribute:kCAConstraintHeight
+                                                                    offset:2 * PADDING]];
     
     [backgroundLayer addSublayer:textBackgroundLayer];
     
